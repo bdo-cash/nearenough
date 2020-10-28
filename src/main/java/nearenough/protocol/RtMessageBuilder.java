@@ -28,7 +28,12 @@ import java.util.TreeMap;
 public final class RtMessageBuilder {
 
   private final Map<RtTag, byte[]> map = new TreeMap<>(
-      Comparator.comparing(RtTag::valueLE, Integer::compareUnsigned)
+          new Comparator<RtTag>() {
+            @Override
+            public int compare(RtTag o1, RtTag o2) {
+              return Integer.compareUnsigned(o1.valueLE(), o2.valueLE());
+            }
+          }
   );
 
   private ByteBufAllocator allocator = ByteBufAllocator.DEFAULT;

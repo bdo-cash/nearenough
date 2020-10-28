@@ -27,6 +27,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.BiConsumer;
+
 import nearenough.protocol.exceptions.InvalidNumTagsException;
 import nearenough.protocol.exceptions.MessageTooShortException;
 import nearenough.protocol.exceptions.MessageUnalignedException;
@@ -241,14 +243,17 @@ public final class RtMessage {
 
     if (map != null) {
       map.forEach(
-          (tag, value) -> {
-            sb.append(indent2).append(tag.name()).append("(").append(value.length).append(") = ");
-            if (tag.isNested()) {
-              sb.append(fromBytes(value).toString(indentLevel + 1));
-            } else {
-              sb.append(ByteBufUtil.hexDump(value)).append('\n');
-            }
-          }
+              new BiConsumer<RtTag, byte[]>() {
+                @Override
+                public void accept(RtTag tag, byte[] value) {
+                  sb.append(indent2).append(tag.name()).append("(").append(value.length).append(") = ");
+                  if (tag.isNested()) {
+                    sb.append(fromBytes(value).toString(indentLevel + 1));
+                  } else {
+                    sb.append(ByteBufUtil.hexDump(value)).append('\n');
+                  }
+                }
+              }
       );
     }
     sb.append(indent1).append("}\n");

@@ -19,10 +19,7 @@ import static nearenough.util.BytesUtil.hexToBytes;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.DatagramPacket;
 import io.netty.channel.socket.nio.NioDatagramChannel;
@@ -72,11 +69,14 @@ public final class NettyClient {
 
       // Sends the request to the Roughtime server
       ctx.writeAndFlush(new DatagramPacket(encodedMsg, addr))
-          .addListener(future -> {
-            if (!future.isSuccess()) {
-              System.out.println("Send failed " + future.cause().getMessage());
-            }
-          });
+          .addListener(new ChannelFutureListener() {
+                         @Override
+                         public void operationComplete(ChannelFuture future) throws Exception {
+                           if (!future.isSuccess()) {
+                             System.out.println("Send failed " + future.cause().getMessage());
+                           }
+                         }
+                       });
     }
 
     @SuppressWarnings("Duplicates")
@@ -116,7 +116,12 @@ public final class NettyClient {
         System.out.println("Response INVALID: " + client.invalidResponseCause().getMessage());
       }
 
-      ctx.close().addListener(unused -> System.exit(0));
+      ctx.close().addListener(new ChannelFutureListener() {
+                                @Override
+                                public void operationComplete(ChannelFuture unused) throws Exception {
+                                  System.exit(0);
+                                }
+                              });
     }
 
     @Override
@@ -153,12 +158,15 @@ public final class NettyClient {
         });
 
     ChannelFuture connectFuture = bootstrap.connect();
-    connectFuture.addListener(future -> {
-      if (!future.isSuccess()) {
-        System.out.println("Connect fail:");
-        System.out.println(future.cause().getMessage());
-      }
-    });
+    connectFuture.addListener(new ChannelFutureListener() {
+                                @Override
+                                public void operationComplete(ChannelFuture future) throws Exception {
+                                  if (!future.isSuccess()) {
+                                    System.out.println("Connect fail:");
+                                    System.out.println(future.cause().getMessage());
+                                  }
+                                }
+                              });
 
     connectFuture.channel().closeFuture().sync();
     nioEventLoopGroup.shutdownGracefully();

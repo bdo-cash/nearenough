@@ -22,6 +22,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.function.ToIntFunction;
 
 /**
  * Encodes/decodes {@link RtMessage Roughtime messages} and fields to/from their on-the-wire format.
@@ -68,7 +69,12 @@ public final class RtWire {
     int numTagsSum = 4;
     int tagsSum = 4 * map.size();
     int offsetsSum = map.size() < 2 ? 0 : (4 * (map.size() - 1));
-    int valuesSum = map.values().stream().mapToInt(value -> value.length).sum();
+    int valuesSum = map.values().stream().mapToInt(new ToIntFunction<byte[]>() {
+      @Override
+      public int applyAsInt(byte[] value) {
+        return value.length;
+      }
+    }).sum();
 
     return numTagsSum + tagsSum + offsetsSum + valuesSum;
   }
